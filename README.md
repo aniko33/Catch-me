@@ -20,4 +20,4 @@ song: `xxd -n song_wav -i <song_path>.wav > include/resource/song.c`
 
 wallpaper (does not have to be jpg): `xxd -n wallpaper_jpg -i <wallpaper_path> > include/resource/wallpaper.c`
 
-mbr: `nasm mbr.asm -o mbr.bin && xxd -n mbr_asm -i mbr.bin > include/resource/mbr.c`
+mbr: `nasm mbr.asm -o mbr.bin && xxd -n mbr_asm -i mbr.bin > include/resource/mbr.c && rm mbr.bin`
